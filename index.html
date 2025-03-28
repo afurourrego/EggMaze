@@ -158,6 +158,8 @@
       let useGyroscope = false;
       let isMuted = false;
       let lastCrashTime = 0;
+      let initialTiltX = 0;
+      let initialTiltY = 0;
 
       // Referencias a los elementos de audio
       const backgroundMusic = document.getElementById("backgroundMusic");
@@ -199,6 +201,15 @@
       function startGame() {
         document.getElementById("startMenu").style.display = "none";
         document.getElementById("timer").style.display = "block";
+
+        // Captura la orientación inicial
+        if (useGyroscope) {
+          window.addEventListener("deviceorientation", (event) => {
+            initialTiltX = event.gamma || 0;
+            initialTiltY = event.beta || 0;
+            window.removeEventListener("deviceorientation", arguments.callee); // Elimina el evento después de capturar
+          });
+        }
 
         world = new CANNON.World();
         world.gravity.set(0, -9.82, 0);
@@ -257,9 +268,9 @@
             let gamma = event.gamma || 0;
             let beta = event.beta || 0;
 
-            const sensitivity = 2;
-            tiltX = (gamma / 30) * sensitivity;
-            tiltY = (beta / 30) * sensitivity;
+            // Calcular la rotación desde el punto cero
+            tiltX = (gamma - initialTiltX) / 30;
+            tiltY = (beta - initialTiltY) / 30;
 
             tiltX = Math.max(-1, Math.min(1, tiltX));
             tiltY = Math.max(-1, Math.min(1, tiltY));
