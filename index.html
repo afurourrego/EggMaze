@@ -90,11 +90,13 @@
         Play by moving your phone or clicking and moving the maze to advance the egg, avoid falling and reach the goal as quickly as possible!
       </p>
       <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
-        test 3
+        test 4
       </p>
       <button class="button" onclick="startGame()">Iniciar Juego</button>
     </div>
-    <!-- <div id="loseMenu" style="display: none;">
+
+    <!-- Hide on Farade -->
+    <div id="loseMenu" style="display: none;">
       <h1>¡Perdiste!</h1>
       <button class="button" onclick="restartGame()">Reiniciar</button>
     </div>
@@ -102,7 +104,8 @@
       <h1>¡Ganaste!</h1>
       <div id="winTime"></div>
       <button class="button" onclick="restartGame()">Reiniciar</button>
-    </div> -->
+    </div>
+
     <div id="gameContainer" style="position: relative; width: 100%; height: 100vh; overflow: hidden">
       <div id="timer">Tiempo: 0s</div>
 
@@ -532,8 +535,11 @@
         elapsedTime = 0;
         timerInterval = setInterval(updateTimer, 100);
         document.getElementById("timer").style.display = "block";
-        // document.getElementById('loseMenu').style.display = 'none';
-        // document.getElementById('winMenu').style.display = 'none';
+        
+        // Hide on Farade
+        document.getElementById('loseMenu').style.display = 'none';
+        document.getElementById('winMenu').style.display = 'none';
+        
         gameActive = true;
 
         backgroundMusic.currentTime = 0;
@@ -613,8 +619,11 @@
         if (distanceToGoal < 0.7 && gameActive) {
           stopTimer();
           document.getElementById("timer").style.display = "none";
-          // document.getElementById('winMenu').style.display = 'flex';
-          // document.getElementById('winTime').textContent = `Tiempo: ${elapsedTime.toFixed(1)}s`;
+
+          // Hide on Farade
+          document.getElementById('winMenu').style.display = 'flex';
+          document.getElementById('winTime').textContent = `Tiempo: ${elapsedTime.toFixed(1)}s`;
+          
           gameActive = false;
 
           window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
@@ -633,7 +642,10 @@
         if (ballBody.position.y < -20 && gameActive) {
           stopTimer();
           document.getElementById("timer").style.display = "none";
-          // document.getElementById('loseMenu').style.display = 'flex';
+          
+          // Hide on Farade
+          document.getElementById('loseMenu').style.display = 'flex';
+
           gameActive = false;
 
           window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
@@ -735,10 +747,23 @@
       // Prevenir la rotación de la pantalla en dispositivos móviles
       window.addEventListener("orientationchange", (event) => {
         if (isMobileDevice() && event.target.screen.orientation) {
-          event.preventDefault();
-          event.target.screen.orientation.lock("portrait").catch((error) => {
-            console.error("No se pudo bloquear la orientación:", error);
-          });
+          // Solicitar permiso para usar la orientación del dispositivo
+          if (typeof DeviceOrientationEvent.requestPermission === "function") {
+            DeviceOrientationEvent.requestPermission()
+              .then((permissionState) => {
+                if (permissionState === "granted") {
+                  event.target.screen.orientation.lock("portrait").catch((error) => {
+                    console.error("No se pudo bloquear la orientación:", error);
+                  });
+                }
+              })
+              .catch(console.error);
+          } else {
+            // Bloquear la orientación si no se necesita permiso
+            event.target.screen.orientation.lock("portrait").catch((error) => {
+              console.error("No se pudo bloquear la orientación:", error);
+            });
+          }
         }
       });
 
