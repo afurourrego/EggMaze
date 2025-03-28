@@ -87,7 +87,7 @@
     <div id="startMenu">
       <h1>EggMaze</h1>
       <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
-        Click and move the maze to advance the egg, avoid falling and reach the goal as quickly as possible!
+        Play by moving your phone or clicking and moving the maze to advance the egg, avoid falling and reach the goal as quickly as possible!
       </p>
       <button class="button" onclick="startGame()">Iniciar Juego</button>
     </div>
@@ -605,7 +605,7 @@
           window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
 
           window.FarcadeSDK.singlePlayer.actions.gameOver({
-            score: Math.max(0, Math.floor(9999 - elapsedTime * 1000)),
+            score: Math.max(1, Math.floor(9999 - elapsedTime * 1000)),
           });
 
           backgroundMusic.pause();
@@ -714,6 +714,15 @@
         if (isMobileDevice() && !window.DeviceOrientationEvent) {
           console.log("El giroscopio no está soportado en este dispositivo móvil.");
           useGyroscope = false;
+        }
+      });
+
+      // Prevenir la rotación de la pantalla en dispositivos móviles
+      window.addEventListener("orientationchange", (event) => {
+        if (isMobileDevice() && event.target.screen.orientation) {
+          event.target.screen.orientation.lock("portrait").catch((error) => {
+            console.error("No se pudo bloquear la orientación:", error);
+          });
         }
       });
 
