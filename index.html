@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>EggMaze</title>
     <style>
       body {
@@ -12,11 +12,6 @@
         text-align: center;
         color: black;
         font-family: Arial, sans-serif;
-        width: 100vw;
-        height: 100vh;
-        position: fixed;
-        top: 0;
-        left: 0;
       }
       .ui {
         position: absolute;
@@ -83,13 +78,6 @@
         font-size: 24px;
         margin-bottom: 20px;
       }
-      #gameContainer {
-        width: 100%;
-        height: 100vh;
-        overflow: hidden;
-        position: absolute;
-        touch-action: none;
-      }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/@farcade/game-sdk@latest/dist/index.min.js"></script>
@@ -102,26 +90,49 @@
         Play by moving your phone or clicking and moving the maze to advance the egg, avoid falling and reach the goal as quickly as possible!
       </p>
       <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
-        test 2
+        test 3
       </p>
       <button class="button" onclick="startGame()">Iniciar Juego</button>
     </div>
-    <div id="gameContainer">
+    <!-- <div id="loseMenu" style="display: none;">
+      <h1>¡Perdiste!</h1>
+      <button class="button" onclick="restartGame()">Reiniciar</button>
+    </div>
+    <div id="winMenu" style="display: none;">
+      <h1>¡Ganaste!</h1>
+      <div id="winTime"></div>
+      <button class="button" onclick="restartGame()">Reiniciar</button>
+    </div> -->
+    <div id="gameContainer" style="position: relative; width: 100%; height: 100vh; overflow: hidden">
       <div id="timer">Tiempo: 0s</div>
+
+      <!-- Elementos de audio -->
       <audio id="backgroundMusic" loop>
-        <source src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/music-ZsBQyqqMVxjDkAPmvqiTCkfjmo2nAx.mpeg?iQVg" type="audio/mp3" />
+        <source
+          src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/music-ZsBQyqqMVxjDkAPmvqiTCkfjmo2nAx.mpeg?iQVg"
+          type="audio/mp3"
+        />
         Tu navegador no soporta el elemento de audio.
       </audio>
       <audio id="crashSound">
-        <source src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/jump-9vcAsVhhjzCvslwPxgxcMBtlFtxcAv.mpeg?ysAC" type="audio/mp3" />
+        <source
+          src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/jump-9vcAsVhhjzCvslwPxgxcMBtlFtxcAv.mpeg?ysAC"
+          type="audio/mp3"
+        />
         Tu navegador no soporta el elemento de audio.
       </audio>
       <audio id="winnerSound">
-        <source src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/winner-SYNLXYSrnnCKBLhNfD16LFvOY9eIEy.mpeg?YF7L" type="audio/mp3" />
+        <source
+          src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/winner-SYNLXYSrnnCKBLhNfD16LFvOY9eIEy.mpeg?YF7L"
+          type="audio/mp3"
+        />
         Tu navegador no soporta el elemento de audio.
       </audio>
       <audio id="loseSound">
-        <source src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/crash-nNLQjh7s1u1RHR8YxWOau65rA5Xqdz.mpeg?STMi" type="audio/mp3" />
+        <source
+          src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/crash-nNLQjh7s1u1RHR8YxWOau65rA5Xqdz.mpeg?STMi"
+          type="audio/mp3"
+        />
         Tu navegador no soporta el elemento de audio.
       </audio>
     </div>
@@ -129,14 +140,23 @@
     <script>
       let scene, camera, renderer, maze, floor;
       let mazeSize = 9;
-      let tiltX = 0, tiltY = 0;
-      let isDragging = false, lastMouseX = 0, lastMouseY = 0;
+      let tiltX = 0,
+        tiltY = 0;
+      let isDragging = false,
+        lastMouseX = 0,
+        lastMouseY = 0;
       let mazeGrid;
       let ball, goal;
-      let world, ballBody, floorBody, wallBodies = [];
+      let world,
+        ballBody,
+        floorBody,
+        wallBodies = [];
       let startCornerIndex;
-      let sky, clouds = [];
-      let startTime, timerInterval, elapsedTime = 0;
+      let sky,
+        clouds = [];
+      let startTime,
+        timerInterval,
+        elapsedTime = 0;
       let gameActive = false;
       let useGyroscope = false;
       let isMuted = false;
@@ -144,26 +164,11 @@
       let initialTiltX = 0;
       let initialTiltY = 0;
 
+      // Referencias a los elementos de audio
       const backgroundMusic = document.getElementById("backgroundMusic");
       const crashSound = document.getElementById("crashSound");
       const winnerSound = document.getElementById("winnerSound");
       const loseSound = document.getElementById("loseSound");
-
-      // Forzar orientación vertical con CSS
-      const style = document.createElement('style');
-      style.textContent = `
-        @media (orientation: landscape) {
-          html, body {
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-            width: 100vh;
-            height: 100vw;
-            overflow: hidden;
-            position: fixed;
-          }
-        }
-      `;
-      document.head.appendChild(style);
 
       function initSky() {
         scene = new THREE.Scene();
@@ -200,11 +205,12 @@
         document.getElementById("startMenu").style.display = "none";
         document.getElementById("timer").style.display = "block";
 
+        // Captura la orientación inicial
         if (useGyroscope) {
           window.addEventListener("deviceorientation", (event) => {
             initialTiltX = event.gamma || 0;
             initialTiltY = event.beta || 0;
-            window.removeEventListener("deviceorientation", arguments.callee);
+            window.removeEventListener("deviceorientation", arguments.callee); // Elimina el evento después de capturar
           });
         }
 
@@ -227,6 +233,8 @@
               if (permissionState === "granted") {
                 useGyroscope = true;
                 startGyroscope();
+              } else {
+                useGyroscope = false;
               }
             })
             .catch(console.error);
@@ -244,11 +252,17 @@
         animateMaze();
       }
 
-      window.FarcadeSDK.on("play_again", restartGame);
+      window.FarcadeSDK.on("play_again", () => {
+        restartGame();
+      });
+
       window.FarcadeSDK.on("toggle_mute", (data) => {
         isMuted = data.isMuted;
-        if (isMuted) backgroundMusic.pause();
-        else backgroundMusic.play();
+        if (isMuted) {
+          backgroundMusic.pause();
+        } else {
+          backgroundMusic.play();
+        }
       });
 
       function startGyroscope() {
@@ -256,8 +270,11 @@
           if (gameActive && useGyroscope) {
             let gamma = event.gamma || 0;
             let beta = event.beta || 0;
+
+            // Calcular la rotación desde el punto cero
             tiltX = ((gamma - initialTiltX) / 30) * 2;
             tiltY = ((beta - initialTiltY) / 30) * 2;
+
             tiltX = Math.max(-1, Math.min(1, tiltX));
             tiltY = Math.max(-1, Math.min(1, tiltY));
           }
@@ -317,6 +334,7 @@
 
       function generateMaze(size) {
         maze = new THREE.Group();
+
         let floorGeometry = new THREE.BoxGeometry(size, 0.2, size);
         const textureLoader = new THREE.TextureLoader();
         const wallTexture = textureLoader.load(
@@ -329,7 +347,9 @@
         floorTexture.wrapT = THREE.RepeatWrapping;
         floorTexture.repeat.set(9, 9);
 
-        let floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture });
+        let floorMaterial = new THREE.MeshStandardMaterial({
+          map: floorTexture,
+        });
         floor = new THREE.Mesh(floorGeometry, floorMaterial);
         floor.position.set(-0.5, -0.05, -0.5);
         maze.add(floor);
@@ -344,11 +364,17 @@
         mazeGrid = Array.from({ length: size }, () => Array(size).fill(true));
 
         function carveMaze(x, y) {
-          let directions = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+          let directions = [
+            [0, -1],
+            [0, 1],
+            [-1, 0],
+            [1, 0],
+          ];
           directions.sort(() => Math.random() - 0.5);
 
           for (let [dx, dy] of directions) {
-            let nx = x + dx * 2, ny = y + dy * 2;
+            let nx = x + dx * 2,
+              ny = y + dy * 2;
             if (nx > 0 && ny > 0 && nx < size - 1 && ny < size - 1 && mazeGrid[ny][nx]) {
               mazeGrid[y + dy][x + dx] = false;
               mazeGrid[ny][nx] = false;
@@ -378,7 +404,9 @@
 
           if (mazeGrid[y][x]) {
             let wallGeometry = new THREE.BoxGeometry(0.95, 1, 0.95);
-            let wallMaterial = new THREE.MeshStandardMaterial({ map: wallTexture });
+            let wallMaterial = new THREE.MeshStandardMaterial({
+              map: wallTexture,
+            });
             let wall = new THREE.Mesh(wallGeometry, wallMaterial);
             wall.position.set(x - size / 2, 0.5, y - size / 2);
             maze.add(wall);
@@ -479,7 +507,9 @@
         tiltY = 0;
         isDragging = false;
 
-        if (maze) maze.rotation.set(0, 0, 0);
+        if (maze) {
+          maze.rotation.set(0, 0, 0);
+        }
 
         generateMaze(mazeSize);
         const startPos = createBall();
@@ -502,14 +532,19 @@
         elapsedTime = 0;
         timerInterval = setInterval(updateTimer, 100);
         document.getElementById("timer").style.display = "block";
+        // document.getElementById('loseMenu').style.display = 'none';
+        // document.getElementById('winMenu').style.display = 'none';
         gameActive = true;
 
         backgroundMusic.currentTime = 0;
-        if (!isMuted) backgroundMusic.play();
+        if (!isMuted) {
+          backgroundMusic.play();
+        }
       }
 
       function animateSky() {
         requestAnimationFrame(animateSky);
+
         clouds.forEach((cloud) => {
           cloud.position.x += 0.02;
           if (cloud.position.x > 50) {
@@ -522,6 +557,7 @@
           }
           cloud.rotation.y += 0.001;
         });
+
         renderer.render(scene, camera);
       }
 
@@ -565,7 +601,9 @@
 
       function updatePhysics() {
         const timeStep = 1 / 60;
-        for (let i = 0; i < 5; i++) world.step(timeStep / 5);
+        for (let i = 0; i < 5; i++) {
+          world.step(timeStep / 5);
+        }
         ball.position.copy(ballBody.position);
         ball.quaternion.copy(ballBody.quaternion);
 
@@ -575,9 +613,12 @@
         if (distanceToGoal < 0.7 && gameActive) {
           stopTimer();
           document.getElementById("timer").style.display = "none";
+          // document.getElementById('winMenu').style.display = 'flex';
+          // document.getElementById('winTime').textContent = `Tiempo: ${elapsedTime.toFixed(1)}s`;
           gameActive = false;
 
           window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+
           window.FarcadeSDK.singlePlayer.actions.gameOver({
             score: Math.max(1, Math.floor(9999 - elapsedTime * 1000)),
           });
@@ -592,10 +633,14 @@
         if (ballBody.position.y < -20 && gameActive) {
           stopTimer();
           document.getElementById("timer").style.display = "none";
+          // document.getElementById('loseMenu').style.display = 'flex';
           gameActive = false;
 
           window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
-          window.FarcadeSDK.singlePlayer.actions.gameOver({ score: 0 });
+
+          window.FarcadeSDK.singlePlayer.actions.gameOver({
+            score: 0,
+          });
           loseSound.currentTime = 0;
           loseSound.play();
           backgroundMusic.pause();
@@ -606,7 +651,9 @@
         let collisionDetected = false;
         wallBodies.forEach(({ body }) => {
           const distance = ballBody.position.distanceTo(body.position);
-          if (distance < 0.8) collisionDetected = true;
+          if (distance < 0.8) {
+            collisionDetected = true;
+          }
         });
         if (collisionDetected) {
           window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
@@ -669,59 +716,31 @@
         isDragging = false;
       });
 
+      // Prevenir el desplazamiento del cuerpo del documento
       document.body.addEventListener("touchmove", (event) => {
-        event.preventDefault();
+        event.preventDefault(); // Esto previene el desplazamiento en el cuerpo
       });
 
       function isMobileDevice() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       }
 
-      function lockOrientation() {
-        if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('portrait')
-            .catch(err => console.log('No se pudo bloquear la orientación:', err));
-        }
-        const gameContainer = document.getElementById('gameContainer');
-        gameContainer.style.width = `${window.innerWidth}px`;
-        gameContainer.style.height = `${window.innerHeight}px`;
-      }
-
-      function handleOrientationChange() {
-        const isLandscape = window.innerWidth > window.innerHeight;
-        const gameContainer = document.getElementById('gameContainer');
-        
-        if (isLandscape) {
-          gameContainer.style.transform = 'rotate(-90deg)';
-          gameContainer.style.width = `${window.innerHeight}px`;
-          gameContainer.style.height = `${window.innerWidth}px`;
-          gameContainer.style.transformOrigin = 'center';
-          gameContainer.style.position = 'absolute';
-          gameContainer.style.top = '50%';
-          gameContainer.style.left = '50%';
-          gameContainer.style.translate = '-50% -50%';
-        } else {
-          gameContainer.style.transform = 'none';
-          gameContainer.style.width = '100%';
-          gameContainer.style.height = '100vh';
-          gameContainer.style.position = 'relative';
-          gameContainer.style.top = 'auto';
-          gameContainer.style.left = 'auto';
-          gameContainer.style.translate = 'none';
-        }
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      }
-
-      window.addEventListener('load', () => {
-        lockOrientation();
-        handleOrientationChange();
+      window.addEventListener("load", () => {
         if (isMobileDevice() && !window.DeviceOrientationEvent) {
           console.log("El giroscopio no está soportado en este dispositivo móvil.");
           useGyroscope = false;
         }
       });
 
-      window.addEventListener('resize', handleOrientationChange);
+      // Prevenir la rotación de la pantalla en dispositivos móviles
+      window.addEventListener("orientationchange", (event) => {
+        if (isMobileDevice() && event.target.screen.orientation) {
+          event.preventDefault();
+          event.target.screen.orientation.lock("portrait").catch((error) => {
+            console.error("No se pudo bloquear la orientación:", error);
+          });
+        }
+      });
 
       initSky();
     </script>
