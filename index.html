@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>EggMaze</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #e0f7fa;
+        text-align: center;
+        color: black;
+        font-family: Arial, sans-serif;
+      }
+      .ui {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 20px;
+      }
+      .button {
+        padding: 10px 20px;
+        background: #444;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-top: 10px;
+        border-radius: 5px;
+        transition: background 0.3s;
+      }
+      .button:hover {
+        background: #666;
+      }
+      #startMenu, #loseMenu, #winMenu {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.3);
+      }
+      #startMenu h1, #loseMenu h1, #winMenu h1 {
+        color: white;
+        font-size: 48px;
+        margin-bottom: 20px;
+      }
+      #startMenu button, #loseMenu button, #winMenu button {
+        font-size: 24px;
+        padding: 15px 30px;
+      }
+      #timer {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 24px;
+        color: white;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 5px 10px;
+        border-radius: 5px;
+        display: none;
+      }
+      #winTime {
+        color: white;
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/@farcade/game-sdk@latest/dist/index.min.js"></script>
+    <script src="https://unpkg.com/cannon@0.6.2/build/cannon.min.js"></script>
+  </head>
+  <body>
+    <div id="startMenu">
+      <h1>EggMaze</h1>
+      <button class="button" onclick="startGame()">Iniciar Juego</button>
+    </div>
+    <!-- <div id="loseMenu" style="display: none;">
+      <h1>¡Perdiste!</h1>
+      <button class="button" onclick="restartGame()">Reiniciar</button>
+    </div>
+    <div id="winMenu" style="display: none;">
+      <h1>¡Ganaste!</h1>
+      <div id="winTime"></div>
+      <button class="button" onclick="restartGame()">Reiniciar</button>
+    </div> -->
+    <div id="timer">Tiempo: 0s</div>
+
+    <!-- Elementos de audio -->
+    <audio id="backgroundMusic" loop>
+      <source src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/music-ZsBQyqqMVxjDkAPmvqiTCkfjmo2nAx.mpeg?iQVg" type="audio/mp3">
+      Tu navegador no soporta el elemento de audio.
+    </audio>
+    <audio id="crashSound">
+      <source src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/jump-9vcAsVhhjzCvslwPxgxcMBtlFtxcAv.mpeg?ysAC" type="audio/mp3">
+      Tu navegador no soporta el elemento de audio.
+    </audio>
+    <audio id="winnerSound">
+      <source src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/winner-SYNLXYSrnnCKBLhNfD16LFvOY9eIEy.mpeg?YF7L" type="audio/mp3">
+      Tu navegador no soporta el elemento de audio.
+    </audio>
+    <audio id="loseSound">
+      <source src="https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/crash-nNLQjh7s1u1RHR8YxWOau65rA5Xqdz.mpeg?STMi" type="audio/mp3">
+      Tu navegador no soporta el elemento de audio.
+    </audio>
+
+    <script>
+      let scene, camera, renderer, maze, floor;
+      let mazeSize = 9;
+      let tiltX = 0,
+        tiltY = 0;
+      let isDragging = false,
+        lastMouseX = 0,
+        lastMouseY = 0;
+      let mazeGrid;
+      let ball, goal;
+      let world, ballBody, floorBody, wallBodies = [];
+      let startCornerIndex;
+      let sky, clouds = [];
+      let startTime, timerInterval, elapsedTime = 0;
+      let gameActive = false;
+      let useGyroscope = false;
+      let isMuted = false;
+      let lastCrashTime = 0;
+
+      // Referencias a los elementos de audio
+      const backgroundMusic = document.getElementById('backgroundMusic');
+      const crashSound = document.getElementById('crashSound');
+      const winnerSound = document.getElementById('winnerSound');
+      const loseSound = document.getElementById('loseSound');
+
+      function initSky() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, mazeSize * 1.5, 10);
+        camera.lookAt(0, 0, 0);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        let light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(-10, 20, 10);
+        scene.add(light);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const skyGeometry = new THREE.SphereGeometry(50, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({
+          color: 0xb3e3f5,
+          side: THREE.BackSide
+        });
+        sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(sky);
+
+        createClouds();
+        animateSky();
+
+        window.FarcadeSDK.singlePlayer.actions.ready();
+      }
+
+      function startGame() {
+        document.getElementById('startMenu').style.display = 'none';
+        document.getElementById('timer').style.display = 'block';
+
+        world = new CANNON.World();
+        world.gravity.set(0, -9.82, 0);
+
+        generateMaze(mazeSize);
+        const startPos = createBall();
+        const oppositeCorner = getOppositeCorner(startCornerIndex);
+        createGoal(oppositeCorner);
+
+        startTime = Date.now();
+        elapsedTime = 0;
+        timerInterval = setInterval(updateTimer, 100);
+        gameActive = true;
+
+        if (isMobileDevice() && typeof DeviceOrientationEvent.requestPermission === 'function') {
+          DeviceOrientationEvent.requestPermission()
+            .then(permissionState => {
+              if (permissionState === 'granted') {
+                useGyroscope = true;
+                startGyroscope();
+              } else {
+                useGyroscope = false;
+              }
+            })
+            .catch(console.error);
+        } else if (isMobileDevice() && window.DeviceOrientationEvent) {
+          useGyroscope = true;
+          startGyroscope();
+        }
+
+        window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+
+        if (!isMuted) {
+          backgroundMusic.play();
+        }
+
+        animateMaze();
+      }
+
+      window.FarcadeSDK.on('play_again', () => {
+        restartGame();
+      });
+
+      window.FarcadeSDK.on('toggle_mute', (data) => {
+        isMuted = data.isMuted;
+        if (isMuted) {
+          backgroundMusic.pause();
+        } else {
+          backgroundMusic.play();
+        }
+      });
+
+      function startGyroscope() {
+        window.addEventListener("deviceorientation", (event) => {
+          if (gameActive && useGyroscope) {
+            let gamma = event.gamma || 0;
+            let beta = event.beta || 0;
+
+            tiltX = gamma / 30;
+            tiltY = beta / 30;
+
+            tiltX = Math.max(-1, Math.min(1, tiltX));
+            tiltY = Math.max(-1, Math.min(1, tiltY));
+          }
+        });
+      }
+
+      function updateTimer() {
+        elapsedTime = (Date.now() - startTime) / 1000;
+        document.getElementById('timer').textContent = `Tiempo: ${elapsedTime.toFixed(1)}s`;
+      }
+
+      function stopTimer() {
+        clearInterval(timerInterval);
+      }
+
+      function createClouds() {
+        const cloudCount = 20;
+        const radius = 40;
+
+        for (let i = 0; i < cloudCount; i++) {
+          const cloudGroup = new THREE.Group();
+          const sphereCount = 5 + Math.floor(Math.random() * 5);
+          const cloudMaterial = new THREE.MeshStandardMaterial({
+            color: 0xf0f0f0,
+            transparent: true,
+            opacity: 0.8,
+            roughness: 1,
+            metalness: 0,
+          });
+
+          for (let j = 0; j < sphereCount; j++) {
+            const sphereGeometry = new THREE.SphereGeometry(0.5 + Math.random() * 1, 16, 16);
+            const sphere = new THREE.Mesh(sphereGeometry, cloudMaterial);
+            sphere.position.set(
+              (Math.random() - 0.5) * 4,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 4
+            );
+            cloudGroup.add(sphere);
+          }
+
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(2 * Math.random() - 1);
+          const scale = 1 + Math.random() * 1;
+          cloudGroup.scale.set(scale, scale, scale);
+
+          cloudGroup.position.set(
+            radius * Math.sin(phi) * Math.cos(theta),
+            radius * Math.cos(phi),
+            radius * Math.sin(phi) * Math.sin(theta)
+          );
+
+          if (Math.abs(cloudGroup.position.y) < 15) {
+            cloudGroup.position.y = cloudGroup.position.y > 0 ? 15 : -15;
+          }
+
+          scene.add(cloudGroup);
+          clouds.push(cloudGroup);
+        }
+      }
+
+      function generateMaze(size) {
+        maze = new THREE.Group();
+
+        let floorGeometry = new THREE.BoxGeometry(size, 0.2, size);
+        const textureLoader = new THREE.TextureLoader();
+        const wallTexture = textureLoader.load('https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/wall_texture-uk6YXIhwS1w5NSYoDHax3KK4qTGLoD.jpeg?MZ5d');
+        const floorTexture = textureLoader.load('https://lqy3lriiybxcejon.public.blob.vercel-storage.com/sTIzI8dnHVxf/floor-5TF1XU6O0YAG7QYfdzVhJU6m0LKUqN.jpeg?KxaU');
+        floorTexture.wrapS = THREE.RepeatWrapping;
+        floorTexture.wrapT = THREE.RepeatWrapping;
+        floorTexture.repeat.set(9, 9);
+
+        let floorMaterial = new THREE.MeshStandardMaterial({ 
+          map: floorTexture
+        });
+        floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.position.set(-0.5, -0.05, -0.5);
+        maze.add(floor);
+
+        floorBody = new CANNON.Body({
+          mass: 0,
+          position: new CANNON.Vec3(-0.5, -0.05, -0.5),
+        });
+        floorBody.addShape(new CANNON.Box(new CANNON.Vec3(size / 2, 0.1, size / 2)));
+        world.addBody(floorBody);
+
+        mazeGrid = Array.from({ length: size }, () => Array(size).fill(true));
+
+        function carveMaze(x, y) {
+          let directions = [
+            [0, -1],
+            [0, 1],
+            [-1, 0],
+            [1, 0]
+          ];
+          directions.sort(() => Math.random() - 0.5);
+
+          for (let [dx, dy] of directions) {
+            let nx = x + dx * 2,
+              ny = y + dy * 2;
+            if (nx > 0 && ny > 0 && nx < size - 1 && ny < size - 1 && mazeGrid[ny][nx]) {
+              mazeGrid[y + dy][x + dx] = false;
+              mazeGrid[ny][nx] = false;
+              carveMaze(nx, ny);
+            }
+          }
+        }
+
+        mazeGrid[1][1] = false;
+        carveMaze(1, 1);
+
+        const removalChance = 0.05;
+        for (let i = 0; i < size; i++) {
+          if (i > 0 && i < size - 1 && Math.random() < removalChance) mazeGrid[0][i] = false;
+          if (i > 0 && i < size - 1 && Math.random() < removalChance) mazeGrid[size - 1][i] = false;
+          if (i > 0 && i < size - 1 && Math.random() < removalChance) mazeGrid[i][0] = false;
+          if (i > 0 && i < size - 1 && Math.random() < removalChance) mazeGrid[i][size - 1] = false;
+        }
+
+        mazeGrid[0][0] = true;
+        mazeGrid[0][size - 1] = true;
+        mazeGrid[size - 1][0] = true;
+        mazeGrid[size - 1][size - 1] = true;
+
+        function buildWalls(x, y) {
+          if (x >= size || y >= size) return;
+
+          if (mazeGrid[y][x]) {
+            let wallGeometry = new THREE.BoxGeometry(0.95, 1, 0.95);
+            let wallMaterial = new THREE.MeshStandardMaterial({
+              map: wallTexture
+            });
+            let wall = new THREE.Mesh(wallGeometry, wallMaterial);
+            wall.position.set(x - size / 2, 0.5, y - size / 2);
+            maze.add(wall);
+
+            let wallBody = new CANNON.Body({
+              mass: 0,
+              position: new CANNON.Vec3(x - size / 2, 0.5, y - size / 2),
+            });
+            wallBody.addShape(new CANNON.Box(new CANNON.Vec3(0.475, 0.5, 0.475)));
+            world.addBody(wallBody);
+            wallBodies.push({ mesh: wall, body: wallBody });
+          }
+
+          if (x === size - 1) buildWalls(0, y + 1);
+          else buildWalls(x + 1, y);
+        }
+
+        buildWalls(0, 0);
+        scene.add(maze);
+      }
+
+      function createBall() {
+        const ballGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+        const ballMaterial = new THREE.MeshStandardMaterial({ color: 0xe3e3e3 });
+        ball = new THREE.Mesh(ballGeometry, ballMaterial);
+        ball.scale.set(1, 1.3, 1);
+        scene.add(ball);
+
+        ballBody = new CANNON.Body({
+          mass: 1,
+          shape: new CANNON.Sphere(0.3),
+        });
+        world.addBody(ballBody);
+
+        return resetBall();
+      }
+
+      function createGoal(oppositeCorner) {
+        const nest = new THREE.Group();
+        const baseGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.2, 32);
+        const nestMaterial = new THREE.MeshStandardMaterial({
+          color: 0x8b4513,
+          roughness: 0.8,
+          metalness: 0.1
+        });
+        const base = new THREE.Mesh(baseGeometry, nestMaterial);
+        base.position.set(0, 0.1, 0);
+        nest.add(base);
+
+        const rimGeometry = new THREE.TorusGeometry(0.5, 0.1, 16, 32);
+        const rim = new THREE.Mesh(rimGeometry, nestMaterial);
+        rim.rotation.x = Math.PI / 2;
+        rim.position.set(0, 0.2, 0);
+        nest.add(rim);
+
+        nest.position.set(oppositeCorner.x, 0.2, oppositeCorner.z);
+        maze.add(nest);
+        goal = nest;
+      }
+
+      function resetBall() {
+        const corners = [
+          new CANNON.Vec3(-mazeSize / 2 + 1, 1 + 2, -mazeSize / 2 + 1),
+          new CANNON.Vec3(mazeSize / 2 - 2, 1 + 2, -mazeSize / 2 + 1),
+          new CANNON.Vec3(-mazeSize / 2 + 1, 1 + 2, mazeSize / 2 - 2),
+          new CANNON.Vec3(mazeSize / 2 - 2, 1 + 2, mazeSize / 2 - 2),
+        ];
+        startCornerIndex = Math.floor(Math.random() * corners.length);
+        const randomCorner = corners[startCornerIndex];
+        
+        ballBody.position.set(randomCorner.x, randomCorner.y, randomCorner.z);
+        ballBody.velocity.set(0, 0, 0);
+        ballBody.angularVelocity.set(0, 0, 0);
+        
+        return randomCorner;
+      }
+
+      function getOppositeCorner(startIndex) {
+        const oppositeCorners = [
+          new CANNON.Vec3(mazeSize / 2 - 2, 1 + 2, mazeSize / 2 - 2),
+          new CANNON.Vec3(-mazeSize / 2 + 1, 1 + 2, mazeSize / 2 - 2),
+          new CANNON.Vec3(mazeSize / 2 - 2, 1 + 2, -mazeSize / 2 + 1),
+          new CANNON.Vec3(-mazeSize / 2 + 1, 1 + 2, -mazeSize / 2 + 1)
+        ];
+        return oppositeCorners[startIndex];
+      }
+
+      function restartGame() {
+        scene.remove(ball);
+        scene.remove(maze);
+        
+        world.removeBody(ballBody);
+        world.removeBody(floorBody);
+        wallBodies.forEach(({ body }) => world.removeBody(body));
+        
+        wallBodies = [];
+        tiltX = 0;
+        tiltY = 0;
+        isDragging = false;
+        
+        if (maze) {
+          maze.rotation.set(0, 0, 0);
+        }
+
+        generateMaze(mazeSize);
+        const startPos = createBall();
+        const oppositeCorner = getOppositeCorner(startCornerIndex);
+        createGoal(oppositeCorner);
+        
+        world.gravity.set(0, -9.82, 0);
+        
+        floorBody.position.set(-0.5, -0.05, -0.5);
+        floorBody.quaternion.set(0, 0, 0, 1);
+        wallBodies.forEach(({ body, mesh }) => {
+          const worldPos = new THREE.Vector3();
+          mesh.getWorldPosition(worldPos);
+          body.position.copy(worldPos);
+          body.quaternion.set(0, 0, 0, 1);
+        });
+
+        stopTimer();
+        startTime = Date.now();
+        elapsedTime = 0;
+        timerInterval = setInterval(updateTimer, 100);
+        document.getElementById('timer').style.display = 'block';
+        // document.getElementById('loseMenu').style.display = 'none';
+        // document.getElementById('winMenu').style.display = 'none';
+        gameActive = true;
+
+        backgroundMusic.currentTime = 0;
+        if (!isMuted) {
+          backgroundMusic.play();
+        }
+      }
+
+      function animateSky() {
+        requestAnimationFrame(animateSky);
+
+        clouds.forEach(cloud => {
+          cloud.position.x += 0.02;
+          if (cloud.position.x > 50) {
+            cloud.position.x = -50;
+            cloud.position.y = (Math.random() - 0.5) * 80;
+            cloud.position.z = (Math.random() - 0.5) * 80;
+            if (Math.abs(cloud.position.y) < 15) {
+              cloud.position.y = cloud.position.y > 0 ? 15 : -15;
+            }
+          }
+          cloud.rotation.y += 0.001;
+        });
+
+        renderer.render(scene, camera);
+      }
+
+      function animateMaze() {
+        requestAnimationFrame(animateMaze);
+        updatePhysics();
+        checkCollisions();
+
+        if (gameActive) {
+          maze.rotation.x = tiltY * 0.2;
+          maze.rotation.z = tiltX * 0.2;
+        }
+
+        floorBody.quaternion.copy(maze.quaternion);
+        const floorWorldPos = new THREE.Vector3();
+        floor.getWorldPosition(floorWorldPos);
+        floorBody.position.copy(floorWorldPos);
+
+        wallBodies.forEach(({ mesh, body }) => {
+          const worldPos = new THREE.Vector3();
+          mesh.getWorldPosition(worldPos);
+          body.position.copy(worldPos);
+          body.quaternion.copy(maze.quaternion);
+        });
+
+        clouds.forEach(cloud => {
+          cloud.position.x += 0.02;
+          if (cloud.position.x > 50) {
+            cloud.position.x = -50;
+            cloud.position.y = (Math.random() - 0.5) * 80;
+            cloud.position.z = (Math.random() - 0.5) * 80;
+            if (Math.abs(cloud.position.y) < 15) {
+              cloud.position.y = cloud.position.y > 0 ? 15 : -15;
+            }
+          }
+          cloud.rotation.y += 0.001;
+        });
+
+        renderer.render(scene, camera);
+      }
+
+      function updatePhysics() {
+        const timeStep = 1 / 60;
+        for (let i = 0; i < 5; i++) {
+          world.step(timeStep / 5);
+        }
+        ball.position.copy(ballBody.position);
+        ball.quaternion.copy(ballBody.quaternion);
+
+        const goalWorldPos = new THREE.Vector3();
+        goal.getWorldPosition(goalWorldPos);
+        const distanceToGoal = ball.position.distanceTo(goalWorldPos);
+        if (distanceToGoal < 0.7 && gameActive) {
+          stopTimer();
+          document.getElementById('timer').style.display = 'none';
+          // document.getElementById('winMenu').style.display = 'flex';
+          // document.getElementById('winTime').textContent = `Tiempo: ${elapsedTime.toFixed(1)}s`;
+          gameActive = false;
+          
+          window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+          
+          window.FarcadeSDK.singlePlayer.actions.gameOver({ 
+            score: Math.max(0, Math.floor(9999 - (elapsedTime * 1000)))
+          });
+
+          backgroundMusic.pause();
+          if (!isMuted) {
+            winnerSound.currentTime = 0;
+            winnerSound.play();
+          }
+        }
+
+        if (ballBody.position.y < -20 && gameActive) {
+          stopTimer();
+          document.getElementById('timer').style.display = 'none';
+          // document.getElementById('loseMenu').style.display = 'flex';
+          gameActive = false;
+          
+          window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+          
+          window.FarcadeSDK.singlePlayer.actions.gameOver({ 
+            score: 0
+          });
+          loseSound.currentTime = 0;
+          loseSound.play();
+          backgroundMusic.pause();
+        }
+      }
+
+      function checkCollisions() {
+        let collisionDetected = false;
+        wallBodies.forEach(({ body }) => {
+          const distance = ballBody.position.distanceTo(body.position);
+          if (distance < 0.8) {
+            collisionDetected = true;
+          }
+        });
+        if (collisionDetected) {
+          window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+          const currentTime = Date.now();
+          if (currentTime - lastCrashTime >= 200 && !isMuted) {
+            crashSound.currentTime = 0;
+            crashSound.play();
+            lastCrashTime = currentTime;
+          }
+        }
+      }
+
+      document.addEventListener("mousedown", (event) => {
+        if (gameActive && !isMobileDevice()) {
+          isDragging = true;
+          lastMouseX = event.clientX;
+          lastMouseY = event.clientY;
+        }
+      });
+
+      document.addEventListener("mousemove", (event) => {
+        if (isDragging && gameActive && !isMobileDevice()) {
+          let deltaX = (event.clientX - lastMouseX) * 0.01;
+          let deltaY = (event.clientY - lastMouseY) * 0.01;
+          tiltX += deltaX;
+          tiltY += deltaY;
+          lastMouseX = event.clientX;
+          lastMouseY = event.clientY;
+        }
+      });
+
+      document.addEventListener("mouseup", () => {
+        isDragging = false;
+      });
+
+      document.addEventListener("touchstart", (event) => {
+        if (gameActive && isMobileDevice() && !useGyroscope && event.touches.length === 1) {
+          isDragging = true;
+          lastMouseX = event.touches[0].clientX;
+          lastMouseY = event.touches[0].clientY;
+        }
+      });
+
+      document.addEventListener("touchmove", (event) => {
+        if (isDragging && gameActive && isMobileDevice() && !useGyroscope && event.touches.length === 1) {
+          let deltaX = (event.touches[0].clientX - lastMouseX) * 0.01;
+          let deltaY = (event.touches[0].clientY - lastMouseY) * 0.01;
+          tiltX += deltaX;
+          tiltY += deltaY;
+          lastMouseX = event.touches[0].clientX;
+          lastMouseY = event.touches[0].clientY;
+          event.preventDefault();
+        }
+      });
+
+      document.addEventListener("touchend", () => {
+        isDragging = false;
+      });
+
+      function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      }
+
+      window.addEventListener("load", () => {
+        if (isMobileDevice() && !window.DeviceOrientationEvent) {
+          console.log("El giroscopio no está soportado en este dispositivo móvil.");
+          useGyroscope = false;
+        }
+      });
+
+      initSky();
+    </script>
+  </body>
+</html>
