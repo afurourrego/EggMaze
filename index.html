@@ -257,8 +257,9 @@
             let gamma = event.gamma || 0;
             let beta = event.beta || 0;
 
-            tiltX = gamma / 30;
-            tiltY = beta / 30;
+            const sensitivity = 0.5;
+            tiltX = (gamma / 30) * sensitivity;
+            tiltY = (beta / 30) * sensitivity;
 
             tiltX = Math.max(-1, Math.min(1, tiltX));
             tiltY = Math.max(-1, Math.min(1, tiltY));
