@@ -89,6 +89,9 @@
       <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
         Play by moving your phone or clicking and moving the maze to advance the egg, avoid falling and reach the goal as quickly as possible!
       </p>
+      <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
+        -
+      </p>
       <button class="button" onclick="startGame()">Iniciar Juego</button>
     </div>
 
@@ -272,8 +275,10 @@
             let beta = event.beta || 0;
 
             // Calcular la rotación desde el punto cero
-            tiltX = -((initialTiltX + gamma / 10) - initialTiltX);
-            tiltY = (initialTiltY + beta / 10) - initialTiltY;
+            // tiltX = -((initialTiltX + gamma / 10) - initialTiltX);
+            // tiltY = (initialTiltY + beta / 10) - initialTiltY;
+            tiltX = -(gamma - initialTiltX); 
+            tiltY = (beta - initialTiltY); 
 
             tiltX = Math.max(-1.5, Math.min(1.5, tiltX));
             tiltY = Math.max(-1.5, Math.min(1.5, tiltY));
