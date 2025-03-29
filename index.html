@@ -90,7 +90,7 @@
         Play by moving your phone or clicking and moving the maze to advance the egg, avoid falling and reach the goal as quickly as possible!
       </p>
       <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
-        
+        -
       </p>
       <button class="button" onclick="startGame()">Iniciar Juego</button>
     </div>
@@ -215,7 +215,7 @@
             initialTiltX = event.gamma;
             initialTiltY = event.beta;
             // Actualiza los valores en pantalla
-            document.getElementById("tiltValues").textContent = `TiltX: ${initialTiltX.toFixed(2)}, TiltY: ${initialTiltY.toFixed(2)}`;
+            document.getElementById("tiltValues").textContent = `TiltX: ${initialTiltX}, TiltY: ${initialTiltY}`;
           }, { once: true }); // Asegúrate de que se ejecute solo una vez
         }
 
