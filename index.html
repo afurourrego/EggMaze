@@ -89,11 +89,11 @@
       <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
         Play by moving your phone or clicking and moving the maze to advance the egg, avoid falling and reach the goal as quickly as possible!
       </p>
-      <button class="button" onclick="startGame()">Iniciar Juego</button>
+      <button class="button" onclick="startGame()">Sart Game</button>
     </div>
 
     <!-- Hide on Farade -->
-    <!-- <div id="loseMenu" style="display: none;">
+    <div id="loseMenu" style="display: none;">
       <h1>YOU LOST</h1>
       <button class="button" onclick="restartGame()">Restart</button>
     </div>
@@ -101,7 +101,7 @@
       <h1>WINNER</h1>
       <div id="winTime"></div>
       <button class="button" onclick="restartGame()">Restart</button>
-    </div> -->
+    </div>
 
     <div id="gameContainer" style="position: relative; width: 100%; height: 100vh; overflow: hidden">
       <div id="timer">Time: 0s</div>
@@ -533,8 +533,8 @@
         document.getElementById("timer").style.display = "block";
         
         // Hide on Farade
-        // document.getElementById('loseMenu').style.display = 'none';
-        // document.getElementById('winMenu').style.display = 'none';
+        document.getElementById('loseMenu').style.display = 'none';
+        document.getElementById('winMenu').style.display = 'none';
         
         gameActive = true;
 
@@ -617,8 +617,8 @@
           document.getElementById("timer").style.display = "none";
 
           // Hide on Farade
-          // document.getElementById('winMenu').style.display = 'flex';
-          // document.getElementById('winTime').textContent = `Time: ${elapsedTime.toFixed(1)}s`;
+          document.getElementById('winMenu').style.display = 'flex';
+          document.getElementById('winTime').textContent = `Time: ${elapsedTime.toFixed(1)}s`;
           
           gameActive = false;
 
@@ -640,7 +640,7 @@
           document.getElementById("timer").style.display = "none";
           
           // Hide on Farade
-          // document.getElementById('loseMenu').style.display = 'flex';
+          document.getElementById('loseMenu').style.display = 'flex';
 
           gameActive = false;
 
