@@ -61,7 +61,7 @@
         font-size: 24px;
         padding: 15px 30px;
       }
-      #timer, #tiltValues {
+      #timer {
         position: absolute;
         top: 10px;
         left: 50%;
@@ -89,9 +89,6 @@
       <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
         Play by moving your phone or clicking and moving the maze to advance the egg, avoid falling and reach the goal as quickly as possible!
       </p>
-      <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
-        
-      </p>
       <button class="button" onclick="startGame()">Iniciar Juego</button>
     </div>
 
@@ -108,7 +105,6 @@
 
     <div id="gameContainer" style="position: relative; width: 100%; height: 100vh; overflow: hidden">
       <div id="timer">Time: 0s</div>
-      <div id="tiltValues" style="display: block; top: 40px"></div>
 
       <!-- Elementos de audio -->
       <audio id="backgroundMusic" loop>
@@ -214,9 +210,7 @@
           window.addEventListener("deviceorientation", (event) => {
             initialTiltX = event.gamma;
             initialTiltY = event.beta;
-            // Actualiza los valores en pantalla
-            document.getElementById("tiltValues").textContent = `TiltX: ${initialTiltX}, TiltY: ${initialTiltY}`;
-          }, { once: true }); // Asegúrate de que se ejecute solo una vez
+          }, { once: true });
         }
 
         world = new CANNON.World();
@@ -748,7 +742,7 @@
 
       // Prevenir la rotación de la pantalla en dispositivos móviles
       window.addEventListener("orientationchange", (event) => {
-        if (isMobileDevice() && event.target.screen.orientation) {
+        if (isMobileDevice()) {
           // Solicitar permiso para usar la orientación del dispositivo
           if (typeof DeviceOrientationEvent.requestPermission === "function") {
             DeviceOrientationEvent.requestPermission()
