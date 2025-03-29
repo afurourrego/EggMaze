@@ -210,7 +210,7 @@
         document.getElementById("timer").style.display = "block";
 
         // Captura la orientación inicial
-        if (useGyroscope) {
+        if (isMobileDevice()) {
           window.addEventListener("deviceorientation", (event) => {
             initialTiltX = event.gamma;
             initialTiltY = event.beta;
