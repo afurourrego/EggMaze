@@ -273,10 +273,10 @@
 
             // Calcular la rotación desde el punto cero
             tiltX = - (initialTiltX + (gamma / 10));
-            tiltY = initialTiltY ;
+            tiltY = initialTiltY + (beta / 10);
 
-            tiltX = Math.max(-1, Math.min(1, tiltX));
-            tiltY = Math.max(-1, Math.min(1, tiltY));
+            tiltX = Math.max(-1, Math.min(1.5, tiltX));
+            tiltY = Math.max(-1, Math.min(1.5, tiltY));
           }
         });
       }
