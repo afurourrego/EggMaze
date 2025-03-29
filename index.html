@@ -272,8 +272,8 @@
             let beta = event.beta || 0;
 
             // Calcular la rotación desde el punto cero
-            tiltX = ((initialTiltX + gamma) / 10);
-            tiltY = ((initialTiltY + beta) / 10);
+            tiltX = - ((initialTiltX + gamma) / 10);
+            tiltY = (((initialTiltY * 2) + beta) / 10);
 
             tiltX = Math.max(-1, Math.min(1, tiltX));
             tiltY = Math.max(-1, Math.min(1, tiltY));
