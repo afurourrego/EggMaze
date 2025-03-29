@@ -208,8 +208,8 @@
         // Captura la orientación inicial
         if (useGyroscope) {
           window.addEventListener("deviceorientation", (event) => {
-            initialTiltX = event.gamma || 0;
-            initialTiltY = event.beta || 0;
+            initialTiltX = event.gamma;
+            initialTiltY = event.beta;
             window.removeEventListener("deviceorientation", arguments.callee); // Elimina el evento después de capturar
           });
         }
@@ -273,7 +273,7 @@
 
             // Calcular la rotación desde el punto cero
             tiltX = - ((initialTiltX + gamma) / 10);
-            tiltY = (((initialTiltY * 2) + beta) / 10);
+            tiltY = ((initialTiltY + beta) / 10);
 
             tiltX = Math.max(-1, Math.min(1, tiltX));
             tiltY = Math.max(-1, Math.min(1, tiltY));
