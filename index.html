@@ -108,6 +108,7 @@
 
     <div id="gameContainer" style="position: relative; width: 100%; height: 100vh; overflow: hidden">
       <div id="timer">Tiempo: 0s</div>
+      <div id="tiltValues" style="color: white; font-size: 24px; position: absolute; top: 50px; left: 50%; transform: translateX(-50%);"></div>
 
       <!-- Elementos de audio -->
       <audio id="backgroundMusic" loop>
@@ -213,7 +214,8 @@
           window.addEventListener("deviceorientation", (event) => {
             initialTiltX = event.gamma;
             initialTiltY = event.beta;
-            // window.removeEventListener("deviceorientation", arguments.callee); // Elimina el evento después de capturar
+            // Actualiza los valores en pantalla
+            document.getElementById("tiltValues").textContent = `TiltX: ${initialTiltX.toFixed(2)}, TiltY: ${initialTiltY.toFixed(2)}`;
           }, { once: true }); // Asegúrate de que se ejecute solo una vez
         }
 
@@ -275,10 +277,8 @@
             let beta = event.beta || 0;
 
             // Calcular la rotación desde el punto cero
-            // tiltX = -((initialTiltX + gamma / 10) - initialTiltX);
-            // tiltY = (initialTiltY + beta / 10) - initialTiltY;
-            tiltX = -(gamma - initialTiltX); 
-            tiltY = (beta - initialTiltY); 
+            tiltX = -(gamma - initialTiltX) / 10; 
+            tiltY = (beta - initialTiltY) / 10; 
 
             tiltX = Math.max(-1.5, Math.min(1.5, tiltX));
             tiltY = Math.max(-1.5, Math.min(1.5, tiltY));
