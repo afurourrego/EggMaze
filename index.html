@@ -210,8 +210,8 @@
           window.addEventListener("deviceorientation", (event) => {
             initialTiltX = event.gamma;
             initialTiltY = event.beta;
-            window.removeEventListener("deviceorientation", arguments.callee); // Elimina el evento después de capturar
-          });
+            // window.removeEventListener("deviceorientation", arguments.callee); // Elimina el evento después de capturar
+          }, { once: true }); // Asegúrate de que se ejecute solo una vez
         }
 
         world = new CANNON.World();
@@ -273,7 +273,7 @@
 
             // Calcular la rotación desde el punto cero
             tiltX = - ((initialTiltX + gamma) / 10);
-            tiltY = ((-initialTiltY + beta) / 10);
+            tiltY = ((initialTiltY + beta) / 10);
 
             tiltX = Math.max(-1, Math.min(1, tiltX));
             tiltY = Math.max(-1, Math.min(1, tiltY));
