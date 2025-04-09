@@ -413,7 +413,7 @@
 
             let wallBody = new CANNON.Body({
               mass: 0,
-              position: new CANNON.Vec3(x - size / 2, 0.5, y - size / 2),
+              position: new CANNON.Vec3((x - size / 2) + 0.5, 0.5, (y - size / 2) + 0.5),
             });
             wallBody.addShape(new CANNON.Box(new CANNON.Vec3(0.475, 0.5, 0.475)));
             world.addBody(wallBody);
