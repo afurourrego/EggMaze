@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>EggMaze</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap" rel="stylesheet">
     <style>
       body {
         margin: 0;
@@ -78,6 +81,53 @@
         font-size: 24px;
         margin-bottom: 20px;
       }
+      #titleImage {
+        display: block;
+        margin: 0 auto;
+      }
+
+      #startButtonImage {
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      #startButtonImage:hover {
+        transform: scale(1.1);
+      }
+
+      #loseImage {
+        display: block;
+        margin: 0 auto;
+      }
+
+      #restartButtonImage {
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      #restartButtonImage:hover {
+        transform: scale(1.1);
+      }
+
+      #winImage {
+        display: block;
+        margin: 0 auto;
+      }
+
+      #restartButtonImage {
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      #restartButtonImage:hover {
+        transform: scale(1.1);
+      }
+
+      .tiny5-regular {
+        font-family: "Tiny5", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+      }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/@farcade/game-sdk@latest/dist/index.min.js"></script>
@@ -86,26 +136,34 @@
   
   <body>
     <div id="startMenu">
-      <h1>EggMaze</h1>
-      <p style="color: white; font-size: 14px; max-width: 600px; padding: 0 20px">
+      <img src="title.png" alt="EggMaze Title" id="titleImage" style="max-width: 280px; margin-bottom: 20px;" />
+      <p class="tiny5-regular" style="color: #482b03; background-color: white; font-size: 20px; max-width: 600px; margin: 15px; padding: 15px; border: #482b03 5px solid;">
         Play by moving your phone or clicking and moving the maze to advance the egg, avoid falling and reach the goal as quickly as possible!
       </p>
-      <button class="button" onclick="startGame()">Sart Game</button>
+      <button class="button" onclick="startGame()" style="background: none; border: none; padding: 0;">
+        <img src="start_btn.png" alt="Start Game" id="startButtonImage" style="max-width: 120px;" />
+      </button>
     </div>
 
     <!-- Hide on Farade -->
     <div id="loseMenu" style="display: none;">
-      <h1>YOU LOST</h1>
-      <button class="button" onclick="restartGame()">Restart</button>
+      <img src="you_burst.png" alt="You Lost" id="loseImage" style="max-width: 280px; margin-bottom: 20px;" />
+      <button class="button" onclick="restartGame()" style="background: none; border: none; padding: 0;">
+        <img src="restart_btn.png" alt="Restart Game" id="restartButtonImage" style="max-width: 120px;" />
+      </button>
     </div>
     <div id="winMenu" style="display: none;">
-      <h1>WINNER</h1>
-      <div id="winTime"></div>
-      <button class="button" onclick="restartGame()">Restart</button>
+      <img src="winner.png" alt="You Win!" id="winImage" style="max-width: 280px; margin-bottom: 20px;" />
+      <div id="winTime" class="tiny5-regular" style="color: white; font-size: 24px; margin-bottom: 20px;">
+        Time: 0s
+      </div>
+      <button class="button" onclick="restartGame()" style="background: none; border: none; padding: 0;">
+        <img src="restart_btn.png" alt="Restart Game" id="restartButtonImage" style="max-width: 120px;" />
+      </button>
     </div>
 
     <div id="gameContainer" style="position: relative; width: 100%; height: 100vh; overflow: hidden">
-      <div id="timer">Time: 0s</div>
+      <div class="tiny5-regular" id="timer">Time: 0s</div>
 
       <!-- Elementos de audio -->
       <audio id="backgroundMusic" loop>
@@ -617,9 +675,10 @@
           stopTimer();
           document.getElementById("timer").style.display = "none";
 
+          let score = Math.max(1, Math.floor(9999 - elapsedTime * 1000));
           // Hide on Farade
           document.getElementById('winMenu').style.display = 'flex';
-          document.getElementById('winTime').textContent = `Time: ${elapsedTime.toFixed(1)}s`;
+          document.getElementById('winTime').textContent = `${score} pts`;
           
           gameActive = false;
 
