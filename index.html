@@ -728,7 +728,6 @@
       }
 
       function setUserScore(score) {
-        const launcherJwt = getLauncherJwt(); // Obtén el JWT desde la URL
         if (!launcherJwt) {
           console.error("Launcher JWT no encontrado en la URL.");
           return;
