@@ -229,6 +229,14 @@
       const winnerSound = document.getElementById("winnerSound");
       const loseSound = document.getElementById("loseSound");
 
+      function getLauncherJwt() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('token'); // Obtiene el valor del parámetro 'token'
+      }
+
+      const launcherJwt = getLauncherJwt();
+      console.log("Launcher JWT:", launcherJwt);
+
       function initSky() {
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -676,16 +684,20 @@
           document.getElementById("timer").style.display = "none";
 
           let score = Math.max(1, Math.floor(9999 - elapsedTime * 1000));
-          // Hide on Farade
+          
+          // Enviar el puntaje automáticamente al ganar
+          setUserScore(score);
+
+          // Mostrar el menú de victoria
           document.getElementById('winMenu').style.display = 'flex';
           document.getElementById('winTime').textContent = `${score} pts`;
-          
+
           gameActive = false;
 
           window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
 
           window.FarcadeSDK.singlePlayer.actions.gameOver({
-            score: Math.max(1, Math.floor(9999 - elapsedTime * 1000)),
+            score: score,
           });
 
           backgroundMusic.pause();
@@ -698,7 +710,7 @@
         if (ballBody.position.y < -20 && gameActive) {
           stopTimer();
           document.getElementById("timer").style.display = "none";
-          
+
           // Hide on Farade
           document.getElementById('loseMenu').style.display = 'flex';
 
@@ -713,6 +725,42 @@
           loseSound.play();
           backgroundMusic.pause();
         }
+      }
+
+      function setUserScore(score) {
+        const launcherJwt = getLauncherJwt(); // Obtén el JWT desde la URL
+        if (!launcherJwt) {
+          console.error("Launcher JWT no encontrado en la URL.");
+          return;
+        }
+
+        const nonce = "nonce=50zpzg"; // Genera un nonce único si es necesario
+
+        const myHeaders = new Headers();
+        myHeaders.append("X-Service-Method", "setUserScore");
+        myHeaders.append("Authorization", `Bearer ${launcherJwt}`);
+
+        const raw = JSON.stringify({
+          launcherJwt: launcherJwt,
+          nonce: nonce,
+          score: score
+        });
+
+        const requestOptions = {
+          method: 'POST',
+          headers: myHeaders,
+          body: raw,
+          redirect: 'follow'
+        };
+
+        fetch("https://api.basement.fun/launcher/", requestOptions)
+          .then(response => response.json())
+          .then(result => {
+            console.log("Score sent successfully:", result);
+          })
+          .catch(error => {
+            console.error("Error sending score:", error);
+          });
       }
 
       function checkCollisions() {
