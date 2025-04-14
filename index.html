@@ -737,13 +737,15 @@
 
         const myHeaders = new Headers();
         myHeaders.append("X-Service-Method", "setUserScore");
-        myHeaders.append("Authorization", `Bearer ${launcherJwt}`);
+        // myHeaders.append("Authorization", `Bearer ${launcherJwt}`);
 
         const raw = JSON.stringify({
           launcherJwt: launcherJwt,
           nonce: nonce,
           score: score
         });
+
+        console.error(raw);
 
         const requestOptions = {
           method: 'POST',
