@@ -130,7 +130,7 @@
       }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://unpkg.com/@farcade/game-sdk@latest/dist/index.min.js"></script>
+    <!-- <script src="https://unpkg.com/@farcade/game-sdk@latest/dist/index.min.js"></script> -->
     <script src="https://unpkg.com/cannon@0.6.2/build/cannon.min.js"></script>
   </head>
   
@@ -145,7 +145,7 @@
       </button>
     </div>
 
-    <!-- Hide on Farade -->
+    <!-- Hide on Farcade -->
     <div id="loseMenu" style="display: none;">
       <img src="you_burst.png" alt="You Lost" id="loseImage" style="max-width: 280px; margin-bottom: 20px;" />
       <button class="button" onclick="restartGame()" style="background: none; border: none; padding: 0;">
@@ -235,7 +235,7 @@
       }
 
       const launcherJwt = getLauncherJwt();
-      console.log("Launcher JWT:", launcherJwt);
+      // console.log("Launcher JWT:", launcherJwt);
 
       function initSky() {
         scene = new THREE.Scene();
@@ -265,7 +265,7 @@
         createClouds();
         animateSky();
 
-        window.FarcadeSDK.singlePlayer.actions.ready();
+        // window.FarcadeSDK.singlePlayer.actions.ready();
       }
 
       function startGame() {
@@ -309,7 +309,7 @@
           startGyroscope();
         }
 
-        window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+        // window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
 
         if (!isMuted) {
           backgroundMusic.play();
@@ -318,18 +318,18 @@
         animateMaze();
       }
 
-      window.FarcadeSDK.on("play_again", () => {
-        restartGame();
-      });
+      // window.FarcadeSDK.on("play_again", () => {
+      //   restartGame();
+      // });
 
-      window.FarcadeSDK.on("toggle_mute", (data) => {
-        isMuted = data.isMuted;
-        if (isMuted) {
-          backgroundMusic.pause();
-        } else {
-          backgroundMusic.play();
-        }
-      });
+      // window.FarcadeSDK.on("toggle_mute", (data) => {
+      //   isMuted = data.isMuted;
+      //   if (isMuted) {
+      //     backgroundMusic.pause();
+      //   } else {
+      //     backgroundMusic.play();
+      //   }
+      // });
 
       function startGyroscope() {
         window.addEventListener("deviceorientation", (event) => {
@@ -599,7 +599,7 @@
         timerInterval = setInterval(updateTimer, 100);
         document.getElementById("timer").style.display = "block";
         
-        // Hide on Farade
+        // Hide on Farcade
         document.getElementById('loseMenu').style.display = 'none';
         document.getElementById('winMenu').style.display = 'none';
         
@@ -694,11 +694,11 @@
 
           gameActive = false;
 
-          window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+          // window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
 
-          window.FarcadeSDK.singlePlayer.actions.gameOver({
-            score: score,
-          });
+          // window.FarcadeSDK.singlePlayer.actions.gameOver({
+          //   score: score,
+          // });
 
           backgroundMusic.pause();
           if (!isMuted) {
@@ -711,16 +711,16 @@
           stopTimer();
           document.getElementById("timer").style.display = "none";
 
-          // Hide on Farade
+          // Hide on Farcade
           document.getElementById('loseMenu').style.display = 'flex';
 
           gameActive = false;
 
-          window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+          // window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
 
-          window.FarcadeSDK.singlePlayer.actions.gameOver({
-            score: 0,
-          });
+          // window.FarcadeSDK.singlePlayer.actions.gameOver({
+          //   score: 0,
+          // });
           loseSound.currentTime = 0;
           loseSound.play();
           backgroundMusic.pause();
@@ -758,7 +758,7 @@
         fetch("https://api.basement.fun/launcher/", requestOptions)
           .then(response => response.json())
           .then(result => {
-            console.log("Score sent successfully:", result);
+            // console.log("Score sent successfully:", result);
           })
           .catch(error => {
             console.error("Error sending score:", error);
@@ -774,7 +774,7 @@
           }
         });
         if (collisionDetected) {
-          window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+          // window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
           const currentTime = Date.now();
           if (currentTime - lastCrashTime >= 200 && !isMuted) {
             crashSound.currentTime = 0;
@@ -845,7 +845,6 @@
 
       window.addEventListener("load", () => {
         if (isMobileDevice() && !window.DeviceOrientationEvent) {
-          console.log("El giroscopio no está soportado en este dispositivo móvil.");
           useGyroscope = false;
         }
       });
