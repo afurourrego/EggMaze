@@ -737,6 +737,7 @@
 
         const myHeaders = new Headers();
         myHeaders.append("X-Service-Method", "setUserScore");
+        myHeaders.append("Content-Type", "application/json");
         // myHeaders.append("Authorization", `Bearer ${launcherJwt}`);
 
         const raw = JSON.stringify({
