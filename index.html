@@ -237,6 +237,10 @@
       const launcherJwt = getLauncherJwt();
       // console.log("Launcher JWT:", launcherJwt);
 
+      function generateNonce() {
+        return Date.now().toString(); // Usa el timestamp actual como nonce
+      }
+
       function initSky() {
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -688,6 +692,9 @@
           // Enviar el puntaje automáticamente al ganar
           setUserScore(score);
 
+          // Trigger Achievement
+          triggerAchievement("sunnysideup", score);
+
           // Mostrar el menú de victoria
           document.getElementById('winMenu').style.display = 'flex';
           document.getElementById('winTime').textContent = `${score} pts`;
@@ -721,6 +728,11 @@
           // window.FarcadeSDK.singlePlayer.actions.gameOver({
           //   score: 0,
           // });
+          // window.FarcadeSDK.singlePlayer.actions.hapticFeedback();
+
+          // window.FarcadeSDK.singlePlayer.actions.gameOver({
+          //   score: 0,
+          // });
           loseSound.currentTime = 0;
           loseSound.play();
           backgroundMusic.pause();
@@ -733,7 +745,7 @@
           return;
         }
 
-        const nonce = "nonce=50zpzg"; // Genera un nonce único si es necesario
+        const nonce = generateNonce(); // Usa la función para generar el nonce
 
         const myHeaders = new Headers();
         myHeaders.append("X-Service-Method", "setUserScore");
@@ -762,6 +774,42 @@
           })
           .catch(error => {
             console.error("Error sending score:", error);
+          });
+      }
+
+      function triggerAchievement(trigger, value) {
+        if (!launcherJwt) {
+          console.error("Launcher JWT no encontrado en la URL.");
+          return;
+        }
+
+        const nonce = generateNonce(); // Usa la función para generar el nonce
+
+        const myHeaders = new Headers();
+        myHeaders.append("X-Service-Method", "triggerRulesEngine");
+        myHeaders.append("Content-Type", "application/json");
+
+        const raw = JSON.stringify({
+          launcherJwt: launcherJwt,
+          trigger: trigger,
+          nonce: nonce,
+          value: value
+        });
+
+        const requestOptions = {
+          method: 'POST',
+          headers: myHeaders,
+          body: raw,
+          redirect: 'follow'
+        };
+
+        fetch("https://api.basement.fun/launcher/", requestOptions)
+          .then(response => response.json())
+          .then(result => {
+            console.log("Achievement triggered successfully:", result);
+          })
+          .catch(error => {
+            console.error("Error triggering achievement:", error);
           });
       }
 
