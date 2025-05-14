@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
       body {
         margin: 0;
@@ -128,6 +129,17 @@
         font-weight: 400;
         font-style: normal;
       }
+
+      /* Estilos CSS para el botón de sonido */
+      #soundButton {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+      }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- <script src="https://unpkg.com/@farcade/game-sdk@latest/dist/index.min.js"></script> -->
@@ -195,6 +207,11 @@
         Tu navegador no soporta el elemento de audio.
       </audio>
     </div>
+
+    <!-- Agregar el botón de sonido en el HTML -->
+    <button id="soundButton" class="button" onclick="toggleSound()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; padding: 0;">
+      <span class="material-icons" id="soundIcon">volume_up</span>
+    </button>
 
     <script>
       let scene, camera, renderer, maze, floor;
@@ -733,8 +750,12 @@
           // window.FarcadeSDK.singlePlayer.actions.gameOver({
           //   score: 0,
           // });
-          loseSound.currentTime = 0;
-          loseSound.play();
+          
+          // Detener el sonido de "lose" si no está silenciado
+          if (!isMuted) {
+            loseSound.currentTime = 0;
+            loseSound.play();
+          }
           backgroundMusic.pause();
         }
       }
@@ -927,6 +948,21 @@
       }
 
       window.addEventListener('resize', onWindowResize);
+
+      function toggleSound() {
+        isMuted = !isMuted; 
+        const soundIcon = document.getElementById("soundIcon");
+        if (isMuted) {
+          backgroundMusic.pause(); 
+          crashSound.pause(); 
+          winnerSound.pause();
+          loseSound.pause(); 
+          soundIcon.textContent = "volume_off"; 
+        } else {
+          backgroundMusic.play();
+          soundIcon.textContent = "volume_up"; 
+        }
+      }
 
       initSky();
     </script>
